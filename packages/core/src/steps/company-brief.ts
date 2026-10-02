@@ -84,8 +84,8 @@ export async function researchCompany(llm: LLMClient, ctx: ResearchContext): Pro
   let budget = 14_000;
   const pageBlocks: string[] = [];
   for (const p of pages) {
+    if (budget < 200) break;
     const take = Math.min(p.text.length, p.kind === "hiring" ? 5000 : 2500, budget);
-    if (take < 200) break;
     pageBlocks.push(`URL: ${p.url}\nTITLE: ${p.title}\nKIND: ${p.kind}\n${p.text.slice(0, take)}`);
     budget -= take;
   }

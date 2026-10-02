@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { @apply bg-zinc-50 text-ink antialiased; }
+  :focus-visible { @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-white rounded; }
+}
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand text-white hover:bg-brand-dark; }
+  .btn-secondary { @apply btn border border-zinc-300 bg-white text-ink hover:bg-zinc-100; }
+  .btn-ghost { @apply btn text-ink-soft hover:bg-zinc-100 hover:text-ink; }
+  .btn-danger { @apply btn text-red-700 hover:bg-red-50; }
+  .input { @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-ink-faint focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30; }
+  .card { @apply rounded-lg border border-zinc-200 bg-white shadow-sm; }
+  .label { @apply mb-1 block text-sm font-medium text-ink; }
+  .chip { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+}
+
+@media print {
+  header, button, select, details, [role="tablist"] { display: none !important; }
+  .card { box-shadow: none; break-inside: avoid; }
+  textarea { border: none !important; }
+}

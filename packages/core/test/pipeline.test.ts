@@ -102,3 +102,13 @@ describe("runPipeline (offline, rule-based mock model)", () => {
     await expect(runPipeline({ jd: "A real job description here", company_url: "x", days: 0 }, { llm: llm(), allowPrivate: true })).rejects.toMatchObject({ code: "INVALID_INPUT" });
   });
 });
+
+describe("company brief input", () => {
+  it("includes short pages (a tiny homepage is still evidence)", async () => {
+    const { researchCompany } = await import("../src/steps/company-brief.js");
+    let seen = "";
+    const spy = new LLMClient([mockTarget((req) => { seen = req.user; return JSON.stringify({ summary: "s", what_they_do: "w", sources: [] }); })], new RateLimiter(1000));
+    await researchCompany(spy, { companyName: "G", companyUrl: "http://g/", reachable: true, pages: [{ url: "http://g/", title: "G", text: "Globex makes dashboards for retail stores.", kind: "home" }], discussion: [], processDescribed: false, hiringPageUrl: null });
+    expect(seen).toContain("Globex makes dashboards");
+  });
+});
