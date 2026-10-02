@@ -1,0 +1,32 @@
+[
+  {
+    "id": "case-01",
+    "jd": "Senior Backend Engineer \u2014 Acme Logistics (Remote, US)\n\nAbout the role:\nYou will own the services that assign loads to drivers in real time.\n\nWhat you'll do:\n- Design and build dispatch APIs used by 400 carriers\n- Own reliability of our event pipeline\n- Mentor engineers on the team\n\nRequirements:\n- 5+ years building backend services in Node.js or TypeScript\n- Strong PostgreSQL skills, including query optimisation\n- Experience designing REST APIs\n- Experience mentoring junior engineers\n- Clear written communication\n\nNice to have:\n- Kafka or other event streaming systems\n- Familiarity with logistics or freight is a plus\n\nBenefits:\n- Remote-first, 25 days PTO\n",
+    "company_url": "http://localhost:8099/acme/",
+    "days": 5
+  },
+  {
+    "id": "case-02",
+    "jd": "Frontend Developer\nWe need a React developer to help build our dashboard.\n",
+    "company_url": "http://localhost:8099/globex/",
+    "days": 1
+  },
+  {
+    "id": "case-03",
+    "jd": "Product Designer, Globex Analytics\n\nGlobex is looking for a product designer to shape our retail dashboards.\n\nYou have:\n- 3+ years designing B2B SaaS products\n- A portfolio showing end-to-end product design work\n- Comfort running usability tests with customers\n- Strong collaboration with engineers and product managers\n\nBonus points for:\n- Experience with data visualisation\n- Figma prototyping\n",
+    "company_url": "http://localhost:8099/globex/",
+    "days": 60
+  },
+  {
+    "id": "case-04",
+    "jd": "Senior Backend Engineer \u2014 Acme Logistics (Remote, US)\n\nAbout the role:\nYou will own the services that assign loads to drivers in real time.\n\nWhat you'll do:\n- Design and build dispatch APIs used by 400 carriers\n- Own reliability of our event pipeline\n- Mentor engineers on the team\n\nRequirements:\n- 5+ years building backend services in Node.js or TypeScript\n- Strong PostgreSQL skills, including query optimisation\n- Experience designing REST APIs\n- Experience mentoring junior engineers\n- Clear written communication\n\nNice to have:\n- Kafka or other event streaming systems\n- Familiarity with logistics or freight is a plus\n\nBenefits:\n- Remote-first, 25 days PTO\n",
+    "company_url": "http://localhost:8099/does-not-exist/",
+    "days": 7
+  },
+  {
+    "id": "case-05",
+    "jd": "Backend Engineer\n\nRequirements:\n- Python\n- Pair programming comfort\n\nNice to have:\n- Docker",
+    "company_url": "http://localhost:8099/initech/",
+    "days": 3
+  }
+]
