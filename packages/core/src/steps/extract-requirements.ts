@@ -92,11 +92,8 @@ export function groundRequirements(jd: string, raw: Array<z.infer<typeof RawReq>
   const seen = new Set<string>();
 
   for (const r of raw) {
-    const evidence = (r.evidence ?? "").trim();
-    if (!evidence) {
-      rejected.push({ text: r.text, reason: "no evidence quote" });
-      continue;
-    }
+    // Some free models skip the evidence field; then the requirement text itself must be groundable.
+    const evidence = (r.evidence ?? "").trim() || r.text.trim();
     const evNorm = normalise(evidence);
     const grounded = jdNorm.includes(evNorm) || tokenCoverage(evidence, jdTokens) >= 0.8;
     if (!grounded) {

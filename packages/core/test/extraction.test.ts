@@ -22,7 +22,7 @@ describe("groundRequirements", () => {
   it("drops requirements whose evidence is not in the posting (no invention)", () => {
     const out = groundRequirements(JD, [r("Node.js", "5+ years building backend services in Node.js"), r("Kubernetes", "Experience running Kubernetes in production"), r("AWS", "")]);
     expect(out.requirements.map((x) => x.text)).toEqual(["Node.js"]);
-    expect(out.rejected.map((x) => x.reason)).toEqual(["evidence not found in posting", "no evidence quote"]);
+    expect(out.rejected.map((x) => x.reason)).toEqual(["evidence not found in posting", "evidence not found in posting"]);
   });
 
   it("corrects must/nice from the posting's own wording and section headings", () => {
@@ -42,6 +42,11 @@ describe("groundRequirements", () => {
       ["r1", "Node.js"],
       ["r2", "Kafka"],
     ]);
+  });
+
+  it("grounds the requirement text itself when the model omits evidence", () => {
+    const out = groundRequirements(JD, [{ text: "Strong PostgreSQL skills", kind: "technical", priority: "must", evidence: null }]);
+    expect(out.requirements.map((x) => x.text)).toEqual(["Strong PostgreSQL skills"]);
   });
 
   it("normalises behavioral → behavioural and unknown kinds", () => {
