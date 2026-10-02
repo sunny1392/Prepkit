@@ -2,7 +2,7 @@ import type { LLMClient } from "../llm/client.js";
 import { researchCompany, type ResearchContext } from "../steps/company-brief.js";
 import { generateFlashcards } from "../steps/generate-flashcards.js";
 import { generateQuestions, planCategories } from "../steps/generate-questions.js";
-import { QUESTION_CATEGORIES, type Kit, type QuestionCategory } from "./schema.js";
+import { QUESTION_CATEGORIES, type Flashcard, type Kit, type Question, type QuestionCategory } from "./schema.js";
 import {
   assertBriefRegenerable,
   isPreserved,
@@ -24,66 +24,79 @@ export function parseSection(s: string): Section {
   throw new PrepError("INVALID_INPUT", `Unknown section "${s}".`);
 }
 
+export type SectionDrafts =
+  | { section: "schedule" }
+  | { section: "company_brief"; brief: { summary: string; what_they_do: string; sources: string[] }; process?: Kit["interview_process"] }
+  | { section: "flashcards"; drafts: Array<Omit<Flashcard, "id" | "meta">> }
+  | { section: `questions:${QuestionCategory}`; drafts: Array<Omit<Question, "id" | "meta">> };
+
 /**
- * Regenerate ONE section of a kit. Works on a copy; the caller saves it only
- * if the stored version hasn't moved on (optimistic concurrency). Uses the
- * research context stored with the kit, so no re-crawl is needed.
+ * Phase 1 of regeneration (slow, calls the model): produce drafts for ONE
+ * section from a snapshot of the kit and the research context stored with it
+ * (no re-crawl). Nothing is written here.
  */
-export async function regenerateSection(
-  original: Kit,
-  context: ResearchContext,
-  section: Section,
-  llm: LLMClient,
-  opts: { force?: boolean } = {},
-): Promise<{ kit: Kit; kept: number; added: number }> {
-  const kit: Kit = structuredClone(original);
+export async function generateSectionDrafts(snapshot: Kit, context: ResearchContext, section: Section, llm: LLMClient, opts: { force?: boolean } = {}): Promise<SectionDrafts> {
+  if (section === "schedule") return { section };
+  if (section === "company_brief") {
+    assertBriefRegenerable(snapshot, !!opts.force);
+    const r = await researchCompany(llm, context);
+    return { section, brief: { summary: r.summary, what_they_do: r.what_they_do, sources: r.sources }, process: r.interview_process };
+  }
+  if (section === "flashcards") {
+    const drafts = await generateFlashcards(llm, snapshot.role.requirements, snapshot.questions, {
+      roleTitle: snapshot.role.title,
+      companyName: snapshot.source.company,
+      companySummary: snapshot.company_brief.summary,
+    });
+    return { section, drafts };
+  }
+  const category = section.slice("questions:".length) as QuestionCategory;
+  const qctx = {
+    roleTitle: snapshot.role.title,
+    seniority: snapshot.role.seniority,
+    companyName: snapshot.source.company,
+    companySummary: snapshot.company_brief.summary,
+    stages: snapshot.interview_process?.stages ?? [],
+  };
+  const plan = planCategories(snapshot.role.requirements, qctx).find((p) => p.category === category) ?? { category, requirements: [], count: 3, reason: "requested by user" };
+  const drafts = await generateQuestions(llm, plan, qctx, {
+    avoid: snapshot.questions.filter((q) => q.category !== category || isPreserved(q.meta)).map((q) => q.prompt),
+    label: `regenerate:${category}`,
+  });
+  return { section, drafts };
+}
+
+/**
+ * Phase 2 (fast, pure): merge drafts into the LATEST stored kit — not the
+ * snapshot — so edits the user made while the model was running are kept.
+ * Only un-touched generated items of that one section are replaced.
+ */
+export function applySectionDrafts(latest: Kit, d: SectionDrafts, opts: { force?: boolean } = {}): { kit: Kit; kept: number; added: number } {
+  const kit: Kit = structuredClone(latest);
   const genId = newGenerationId();
   let kept = 0;
   let added = 0;
-
-  if (section === "schedule") {
-    regenerateSchedule(kit);
-  } else if (section === "company_brief") {
+  if (d.section === "schedule") regenerateSchedule(kit);
+  else if (d.section === "company_brief") {
     assertBriefRegenerable(kit, !!opts.force);
-    const r = await researchCompany(llm, context);
-    mergeRegeneratedBrief(kit, r, genId);
-    if (r.interview_process) kit.interview_process = r.interview_process;
-  } else if (section === "flashcards") {
+    mergeRegeneratedBrief(kit, d.brief, genId);
+    if (d.process) kit.interview_process = d.process;
+  } else if (d.section === "flashcards") {
     kept = kit.flashcards.filter((f) => isPreserved(f.meta)).length;
-    const drafts = await generateFlashcards(llm, kit.role.requirements, kit.questions, {
-      roleTitle: kit.role.title,
-      companyName: kit.source.company,
-      companySummary: kit.company_brief.summary,
-    });
-    mergeRegeneratedFlashcards(kit, drafts, genId);
-    added = drafts.length;
+    mergeRegeneratedFlashcards(kit, d.drafts, genId);
+    added = d.drafts.length;
   } else {
-    const category = section.slice("questions:".length) as QuestionCategory;
-    const qctx = {
-      roleTitle: kit.role.title,
-      seniority: kit.role.seniority,
-      companyName: kit.source.company,
-      companySummary: kit.company_brief.summary,
-      stages: kit.interview_process?.stages ?? [],
-    };
-    const plan =
-      planCategories(kit.role.requirements, qctx).find((p) => p.category === category) ?? {
-        category,
-        requirements: [],
-        count: 3,
-        reason: "requested by user",
-      };
-    const keptQs = kit.questions.filter((q) => q.category === category && isPreserved(q.meta));
-    kept = keptQs.length;
-    const drafts = await generateQuestions(llm, plan, qctx, {
-      avoid: kit.questions.filter((q) => q.category !== category || isPreserved(q.meta)).map((q) => q.prompt),
-      label: `regenerate:${category}`,
-    });
-    mergeRegeneratedCategory(kit, category, drafts, genId);
-    added = drafts.length;
+    const category = d.section.slice("questions:".length) as QuestionCategory;
+    kept = kit.questions.filter((q) => q.category === category && isPreserved(q.meta)).length;
+    mergeRegeneratedCategory(kit, category, d.drafts, genId);
+    added = d.drafts.length;
   }
-
   const v = validateKit(kit);
   if (!v.ok) throw new PrepError("VALIDATION_FAILED", `Regenerated kit failed validation: ${v.errors.slice(0, 3).join("; ")}`);
   return { kit: v.kit!, kept, added };
+}
+
+/** Convenience for one-shot use (tests, scripts): generate then apply to the same kit. */
+export async function regenerateSection(kit: Kit, context: ResearchContext, section: Section, llm: LLMClient, opts: { force?: boolean } = {}) {
+  return applySectionDrafts(kit, await generateSectionDrafts(kit, context, section, llm, opts), opts);
 }

@@ -13,6 +13,7 @@ const Raw = z.object({ flashcards: z.array(z.unknown()) });
 const RawF = z.object({ front: z.string().min(3), back: z.string().min(1), requirement_ids: z.array(z.string()).nullish() });
 
 export async function generateFlashcards(llm: LLMClient, requirements: Requirement[], questions: Question[], ctx: { roleTitle: string; companyName: string; companySummary: string }): Promise<DraftFlashcard[]> {
+  if (!requirements.length) return []; // nothing to anchor cards to; the pipeline builds cards from questions instead
   const ids = new Set(requirements.map((r) => r.id));
   const target = Math.min(24, Math.max(4, requirements.length * 2));
   const sys = system("You write concise study flashcards for interview preparation.", [
@@ -53,6 +54,10 @@ export async function generateFlashcards(llm: LLMClient, requirements: Requireme
 export function fallbackFlashcards(requirements: Requirement[], questions: Question[], existing: DraftFlashcard[]): DraftFlashcard[] {
   const covered = new Set(existing.flatMap((f) => f.requirement_ids));
   const out: DraftFlashcard[] = [];
+  if (!existing.length && !requirements.length) {
+    // Thin posting: still give the user something to practise, straight from the kit's questions.
+    return questions.slice(0, 6).map((q) => ({ front: q.prompt, back: q.answer_outline || "Prepare a concrete example.", requirement_ids: q.requirement_ids }));
+  }
   for (const r of requirements) {
     if (r.priority !== "must" || covered.has(r.id)) continue;
     const q = questions.find((x) => x.requirement_ids.includes(r.id));
