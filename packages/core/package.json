@@ -1,0 +1,13 @@
+{
+  "name": "@prepkit/core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "robots-parser": "^3.0.1",
+    "zod": "^3.23.8"
+  }
+}
