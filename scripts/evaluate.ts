@@ -7,7 +7,7 @@
  */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { installProxyFromEnv, llmFromEnv, PrepError, runPipeline, validateKit, type Kit } from "@prepkit/core";
+import { installProxyFromEnv, llmFromEnv, PrepError, runPipeline, validateKit, type Kit, type LLMClient } from "@prepkit/core";
 
 try {
   process.loadEnvFile?.(".env");
@@ -62,7 +62,16 @@ async function main() {
 
   // Evaluation sites may be served from localhost, so private hosts are allowed here (and only here).
   const allowPrivate = process.env.EVAL_ALLOW_PRIVATE_HOSTS !== "false";
-  const llm = llmFromEnv();
+  let llm: LLMClient;
+  try {
+    llm = llmFromEnv();
+  } catch (err) {
+    // No provider configured: still honour the contract and write one failed entry per case.
+    const e = err instanceof PrepError ? { code: err.code, message: err.message } : { code: "INTERNAL", message: String(err) };
+    await writeFile(resolve(output), JSON.stringify({ version: "1.0", generated_at: new Date().toISOString(), kits: cases.map((c, i) => ({ id: String(c?.id ?? `case-${i + 1}`), status: "failed", kit: null, error: e })) }, null, 2));
+    console.error(e.message);
+    process.exit(1);
+  }
   llm.onEvent = (e) => {
     if (e.outcome !== "ok") console.error(`  [llm] ${e.label} ${e.target}: ${e.outcome}${e.detail ? ` — ${e.detail.slice(0, 120)}` : ""}`);
   };
