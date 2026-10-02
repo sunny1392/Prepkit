@@ -7,3 +7,4 @@ out
 *.log
 kits.json
 .DS_Store
+*.tsbuildinfo
