@@ -1,0 +1,23 @@
+Senior Backend Engineer — Acme Logistics (Remote, US)
+
+About the role:
+You will own the services that assign loads to drivers in real time.
+
+What you'll do:
+- Design and build dispatch APIs used by 400 carriers
+- Own reliability of our event pipeline
+- Mentor engineers on the team
+
+Requirements:
+- 5+ years building backend services in Node.js or TypeScript
+- Strong PostgreSQL skills, including query optimisation
+- Experience designing REST APIs
+- Experience mentoring junior engineers
+- Clear written communication
+
+Nice to have:
+- Kafka or other event streaming systems
+- Familiarity with logistics or freight is a plus
+
+Benefits:
+- Remote-first, 25 days PTO

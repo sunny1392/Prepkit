@@ -103,6 +103,8 @@ export const KitSchema = z.object({
     passes: z.number().int().nonnegative(),
   }),
   // ---- extensions ----
+  /** High-water marks for ids so a deleted id is never handed out again. */
+  id_seq: z.object({ q: z.number().int().nonnegative(), f: z.number().int().nonnegative() }).optional(),
   interview_process: z
     .object({ found: z.boolean(), stages: z.array(InterviewStageSchema), sources: z.array(z.string()) })
     .optional(),
