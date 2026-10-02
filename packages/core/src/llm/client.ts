@@ -154,7 +154,7 @@ export function llmFromEnv(env: NodeJS.ProcessEnv = process.env): LLMClient {
       for (const m of models) targets.push(openRouterTarget(env.OPENROUTER_API_KEY, m));
     }
     if (p === "gemini" && env.GEMINI_API_KEY) {
-      targets.push(geminiTarget(env.GEMINI_API_KEY, env.GEMINI_MODEL ?? "gemini-2.0-flash"));
+      targets.push(geminiTarget(env.GEMINI_API_KEY, env.GEMINI_MODEL ?? "gemini-2.5-flash"));
     }
     if (p === "mock") targets.push(heuristicMockTarget()); // offline smoke runs only
 

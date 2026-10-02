@@ -1,0 +1,32 @@
+# Render blueprint for the API (free web service). The web app deploys to Vercel.
+services:
+  - type: web
+    name: prepkit-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev
+    startCommand: npm run start:api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODELS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: LLM_PROVIDER_ORDER
+        value: openrouter,gemini
+      - key: LLM_RPM
+        value: "15"
+      - key: ALLOW_PRIVATE_HOSTS
+        value: "false"
+      - key: CORS_ORIGIN
+        sync: false
